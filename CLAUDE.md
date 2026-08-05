@@ -6,7 +6,8 @@
 
 ```bash
 git checkout main && git pull
-git checkout -b feature/branch-name
+git checkout -b feature/branch-name  # 新機能追加
+git checkout -b fix/branch-name      # バグ修正
 # 作業後
 git push -u origin feature/branch-name
 ```
