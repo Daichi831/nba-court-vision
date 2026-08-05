@@ -15,6 +15,12 @@ git push -u origin feature/branch-name
 
 PR作成前に必ず `/code-review` を実行してレビューを確認すること。
 
+マージ後は必ず `main` に戻って最新を取得する。
+
+```bash
+git checkout main && git pull
+```
+
 ## Commands
 
 ```bash
