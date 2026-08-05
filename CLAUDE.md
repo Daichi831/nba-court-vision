@@ -1,5 +1,16 @@
 # CLAUDE.md
 
+## Git ワークフロー
+
+修正・機能追加は必ず `main` からブランチを切って作業する。
+
+```bash
+git checkout main && git pull
+git checkout -b feature/branch-name
+# 作業後
+git push -u origin feature/branch-name
+```
+
 ## Commands
 
 ```bash
