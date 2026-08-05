@@ -10,8 +10,8 @@ description: docs/spec.md・docs/design.md・CLAUDE.mdのArchitectureセクシ�
 ## 手順
 
 1. **差分の取得**
-   - 現在のブランチが `main` でなければ `git diff main...HEAD` でコード変更を確認する。
-   - `main` ブランチ上であれば `git status` と `git diff` で未コミットの変更を確認する。
+   - 現在のブランチが `main` でなければ `git diff main...HEAD`（コミット済み分）と `git diff HEAD`（未コミット・staged分を含む作業ツリーの変更）の両方を確認する。PR作成直前は後者にコードの変更が残っていることが多いため、両方見落とさないこと。
+   - `main` ブランチ上であれば `git diff HEAD` で未コミット（staged含む）の変更を確認する。
    - 差分がなければ「docs更新は不要」と報告して終了する。
 
 2. **影響範囲の判定**
