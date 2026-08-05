@@ -2,15 +2,18 @@
 
 ## Git ワークフロー
 
-修正・機能追加は必ず `main` からブランチを切って作業する。
+修正・機能追加は必ず `main` を最新にしてからブランチを切って作業する。
 
 ```bash
 git checkout main && git pull
 git checkout -b feature/branch-name  # 新機能追加
 git checkout -b fix/branch-name      # バグ修正
 # 作業後
+# PR作成前にコードレビューを実行する
 git push -u origin feature/branch-name
 ```
+
+PR作成前に必ず `/code-review` を実行してレビューを確認すること。
 
 ## Commands
 
