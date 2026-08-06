@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 from nba_api.stats.static import teams
-from nba_api.stats.endpoints import commonteamroster, playercareerstats, playergamelog
+from nba_api.stats.endpoints import commonteamroster, leaguedashplayerstats, playercareerstats, playergamelog
 
 st.set_page_config(page_title="NBA Court Vision", layout="wide")
 
@@ -43,7 +44,10 @@ with st.sidebar:
 def get_season_averages(player_id):
     career = playercareerstats.PlayerCareerStats(player_id=player_id, per_mode36="PerGame")
     df = career.get_data_frames()[0]
-    return df[df["SEASON_ID"] == CURRENT_SEASON]
+    season_df = df[df["SEASON_ID"] == CURRENT_SEASON]
+    if (season_df["TEAM_ABBREVIATION"] == "TOT").any():
+        season_df = season_df[season_df["TEAM_ABBREVIATION"] == "TOT"]
+    return season_df
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def get_game_log(player_id):
@@ -54,6 +58,29 @@ def get_game_log(player_id):
     df["3P"] = df["FG3M"].astype(int).astype(str) + "-" + df["FG3A"].astype(int).astype(str) + " (" + (df["FG3_PCT"] * 100).round(1).astype(str) + "%)"
     df["FT"] = df["FTM"].astype(int).astype(str) + "-" + df["FTA"].astype(int).astype(str) + " (" + (df["FT_PCT"] * 100).round(1).astype(str) + "%)"
     return df[["GAME_DATE", "MATCHUP", "WL", "MIN", "PTS", "REB", "OREB", "DREB", "AST", "BLK", "STL", "TOV", "FG", "3P", "FT"]]
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def get_league_base_stats():
+    stats = leaguedashplayerstats.LeagueDashPlayerStats(
+        measure_type_detailed_defense="Base", per_mode_detailed="PerGame", season=CURRENT_SEASON
+    )
+    return stats.get_data_frames()[0][["PLAYER_ID", "PTS", "PTS_RANK"]]
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def get_league_advanced_stats():
+    stats = leaguedashplayerstats.LeagueDashPlayerStats(
+        measure_type_detailed_defense="Advanced", per_mode_detailed="PerGame", season=CURRENT_SEASON
+    )
+    return stats.get_data_frames()[0][[
+        "PLAYER_ID",
+        "TS_PCT", "TS_PCT_RANK",
+        "AST_PCT", "AST_PCT_RANK",
+        "REB_PCT", "REB_PCT_RANK",
+        "PIE", "PIE_RANK",
+    ]]
+
+def percentile_from_rank(rank, count):
+    return (count - rank) / (count - 1) * 100
 
 # 平均スタッツ
 st.subheader(f"{selected_player_name} — 今シーズン平均（{CURRENT_SEASON}）")
@@ -72,6 +99,63 @@ else:
     for col, label, key, fmt in zip(cols, labels, keys, fmts):
         value = int(row[key]) if fmt == "d" else float(row[key])
         col.metric(label=label, value=f"{value:{fmt}}")
+
+st.divider()
+
+# 能力バランス（五角形チャート）
+st.subheader("能力バランス")
+
+with st.spinner("リーグ全体のスタッツを取得中..."):
+    league_base_df = get_league_base_stats()
+    league_advanced_df = get_league_advanced_stats()
+
+base_row = league_base_df[league_base_df["PLAYER_ID"] == selected_player_id]
+advanced_row = league_advanced_df[league_advanced_df["PLAYER_ID"] == selected_player_id]
+
+if base_row.empty or advanced_row.empty or len(league_base_df) <= 1 or len(league_advanced_df) <= 1:
+    st.info("能力チャート用のデータがありません")
+else:
+    base_row = base_row.iloc[0]
+    advanced_row = advanced_row.iloc[0]
+
+    pentagon_labels = ["得点力", "効率性", "プレーメイク", "リバウンド能力", "影響力"]
+    pentagon_values = [
+        percentile_from_rank(base_row["PTS_RANK"], len(league_base_df)),
+        percentile_from_rank(advanced_row["TS_PCT_RANK"], len(league_advanced_df)),
+        percentile_from_rank(advanced_row["AST_PCT_RANK"], len(league_advanced_df)),
+        percentile_from_rank(advanced_row["REB_PCT_RANK"], len(league_advanced_df)),
+        percentile_from_rank(advanced_row["PIE_RANK"], len(league_advanced_df)),
+    ]
+    pentagon_raw_values = [
+        f"{base_row['PTS']:.1f}",
+        f"{advanced_row['TS_PCT'] * 100:.1f}%",
+        f"{advanced_row['AST_PCT'] * 100:.1f}%",
+        f"{advanced_row['REB_PCT'] * 100:.1f}%",
+        f"{advanced_row['PIE'] * 100:.1f}%",
+    ]
+
+    fig = go.Figure(go.Scatterpolar(
+        r=pentagon_values + [pentagon_values[0]],
+        theta=pentagon_labels + [pentagon_labels[0]],
+        customdata=pentagon_raw_values + [pentagon_raw_values[0]],
+        hovertemplate="%{theta}<br>パーセンタイル: %{r:.0f}<br>実測値: %{customdata}<extra></extra>",
+        fill="toself",
+        line_color="#4C9AFF",
+        fillcolor="rgba(76, 154, 255, 0.35)",
+    ))
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(range=[0, 100], visible=False),
+            angularaxis=dict(rotation=90),
+            bgcolor="rgba(0, 0, 0, 0)",
+        ),
+        paper_bgcolor="rgba(0, 0, 0, 0)",
+        font_color="#808495",
+        showlegend=False,
+        margin=dict(l=60, r=60, t=30, b=30),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(f"{CURRENT_SEASON}シーズン、リーグ全選手内でのパーセンタイル（100に近いほど上位）")
 
 st.divider()
 
