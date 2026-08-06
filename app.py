@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import plotly.graph_objects as go
 from nba_api.stats.static import teams
 from nba_api.stats.endpoints import commonteamroster, leaguedashplayerstats, playercareerstats, playergamelog
