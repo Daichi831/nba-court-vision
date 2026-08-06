@@ -26,7 +26,7 @@
 | `commonteamroster` | チームのロースター取得 | `team_id`, `season` |
 | `playercareerstats` | 選手のシーズン平均スタッツ | `player_id`, `per_mode36="PerGame"` |
 | `playergamelog` | 選手のゲームログ | `player_id`, `season` |
-| `leaguedashplayerstats` | 能力バランス（五角形チャート）用のリーグ全選手スタッツ取得（Base/Advanced） | `measure_type_detailed_defense="Base"/"Advanced"`, `per_mode_detailed="PerGame"`, `season` |
+| `leaguedashplayerstats` | 能力バランス（六角形チャート）用のリーグ全選手スタッツ取得（Base/Advanced） | `measure_type_detailed_defense="Base"/"Advanced"`, `per_mode_detailed="PerGame"`, `season` |
 
 ## キャッシュ戦略
 
