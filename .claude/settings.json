@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); if [ -n \"$branch\" ] && [ \"$branch\" != \"main\" ] && [ \"$branch\" != \"HEAD\" ]; then state=$(gh pr view \"$branch\" --json state -q .state 2>/dev/null); if [ \"$state\" = \"MERGED\" ]; then if git checkout main >/dev/null 2>&1 && git pull >/dev/null 2>&1; then echo \"{\\\"systemMessage\\\": \\\"ブランチ '$branch' のPRがマージ済みだったため main に切り替えて最新化しました\\\"}\"; fi; fi; fi",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
