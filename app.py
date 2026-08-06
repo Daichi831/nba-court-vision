@@ -77,6 +77,7 @@ def get_league_advanced_stats():
         "AST_PCT", "AST_PCT_RANK",
         "REB_PCT", "REB_PCT_RANK",
         "PIE", "PIE_RANK",
+        "DEF_RATING", "DEF_RATING_RANK",
     ]]
 
 def percentile_from_rank(rank, count):
@@ -102,7 +103,7 @@ else:
 
 st.divider()
 
-# 能力バランス（五角形チャート）
+# 能力バランス（六角形チャート）
 st.subheader("能力バランス")
 
 with st.spinner("リーグ全体のスタッツを取得中..."):
@@ -118,13 +119,14 @@ else:
     base_row = base_row.iloc[0]
     advanced_row = advanced_row.iloc[0]
 
-    pentagon_labels = ["得点力", "効率性", "プレーメイク", "リバウンド能力", "影響力"]
+    pentagon_labels = ["得点力", "効率性", "プレーメイク", "リバウンド能力", "影響力", "ディフェンス力"]
     pentagon_values = [
         percentile_from_rank(base_row["PTS_RANK"], len(league_base_df)),
         percentile_from_rank(advanced_row["TS_PCT_RANK"], len(league_advanced_df)),
         percentile_from_rank(advanced_row["AST_PCT_RANK"], len(league_advanced_df)),
         percentile_from_rank(advanced_row["REB_PCT_RANK"], len(league_advanced_df)),
         percentile_from_rank(advanced_row["PIE_RANK"], len(league_advanced_df)),
+        percentile_from_rank(advanced_row["DEF_RATING_RANK"], len(league_advanced_df)),
     ]
     pentagon_raw_values = [
         f"{base_row['PTS']:.1f}",
@@ -132,6 +134,7 @@ else:
         f"{advanced_row['AST_PCT'] * 100:.1f}%",
         f"{advanced_row['REB_PCT'] * 100:.1f}%",
         f"{advanced_row['PIE'] * 100:.1f}%",
+        f"{advanced_row['DEF_RATING']:.1f}",
     ]
 
     fig = go.Figure(go.Scatterpolar(
